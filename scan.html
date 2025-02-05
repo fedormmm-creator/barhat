@@ -34,28 +34,6 @@
             box-shadow: 0 0 20px rgba(0, 255, 0, 0.9);
         }
 
-        #overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.2);
-        }
-
-        #overlay::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 300px;
-            height: 300px;
-            transform: translate(-50%, -50%);
-            background: transparent;
-            border-radius: 10px;
-            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
-        }
-
         #message {
             position: absolute;
             bottom: 20px;
@@ -67,15 +45,13 @@
             padding: 10px 20px;
             border-radius: 10px;
         }
-        #message {
-            font-size: 18px;
-            margin-top: 20px;
-            color: #333;
-        }
 
         #debug {
-            font-size: 16px;
-            margin-top: 10px;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
             color: blue;
             word-wrap: break-word;
         }
@@ -84,6 +60,7 @@
 <body>
     <h2>📸 Наведите камеру на QR-код</h2>
     <video id="video" autoplay></video>
+    <div id="scan-area"></div>
     <p id="message">Ожидание сканирования...</p>
     <p id="debug">Отладочная информация будет здесь</p>
 
@@ -117,12 +94,23 @@
         function sendToTelegram(qrText) {
             const telegram = window.Telegram.WebApp;
 
-            // Логируем данные прямо на сайте
+            // Логируем данные на экране
             debug.innerText = `Отправка данных в Telegram: ${qrText}`;
 
             // Отправляем данные в Telegram
-            telegram.sendData(qrText);
-            telegram.close(); // Закрываем WebApp
+            try {
+                telegram.sendData(qrText); // Отправляем данные в бот
+                message.innerText = "✅ Данные отправлены в Telegram!";
+                debug.innerText += "\n✅ Вызван telegram.close().";
+
+                // Закрываем WebApp через небольшой таймаут (для отладки)
+                setTimeout(() => {
+                    telegram.close(); // Закрываем WebApp
+                }, 1000);
+            } catch (error) {
+                debug.innerText = `❌ Ошибка при закрытии WebApp: ${error}`;
+                console.error("Ошибка при закрытии WebApp:", error);
+            }
         }
 
         window.onload = startScanner;
