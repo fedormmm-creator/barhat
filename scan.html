@@ -28,7 +28,7 @@
                 if (devices.length > 0) {
                     await codeReader.decodeFromVideoDevice(devices[0].deviceId, videoElement, (result, err) => {
                         if (result) {
-                            message.innerText = "✅ QR-код найден!";
+                            message.innerText = `✅ QR-код найден: ${result.text}`;
                             sendToTelegram(result.text);
                         } else {
                             message.innerText = "🔍 Сканирование...";
