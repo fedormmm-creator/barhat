@@ -92,26 +92,33 @@
         }
 
         function sendToTelegram(qrText) {
-            const telegram = window.Telegram.WebApp;
+    const telegram = window.Telegram.WebApp;
 
-            // Логируем данные на экране
-            debug.innerText = `Отправка данных в Telegram: ${qrText}`;
+    // Логируем контекст Telegram WebApp
+    console.log("Контекст Telegram WebApp:", telegram);
 
-            // Отправляем данные в Telegram
-            try {
-                telegram.sendData(qrText); // Отправляем данные в бот
-                message.innerText = "✅ Данные отправлены в Telegram!";
-                debug.innerText += "\n✅ Вызван telegram.close().";
+    if (!telegram) {
+        debug.innerText = "❌ Telegram WebApp не доступен. Убедитесь, что WebApp открыт в Telegram.";
+        return;
+    }
 
-                // Закрываем WebApp через небольшой таймаут (для отладки)
-                setTimeout(() => {
-                    telegram.close(); // Закрываем WebApp
-                }, 1000);
-            } catch (error) {
-                debug.innerText = `❌ Ошибка при закрытии WebApp: ${error}`;
-                console.error("Ошибка при закрытии WebApp:", error);
-            }
-        }
+    try {
+        // Логируем данные, которые отправляем
+        debug.innerText = `Отправка данных в Telegram: ${qrText}`;
+        console.log("Отправляем данные:", qrText);
+
+        // Отправляем данные в Telegram
+        telegram.sendData(qrText);
+
+        // Закрываем WebApp
+        debug.innerText += "\n✅ WebApp пытается закрыться.";
+        telegram.close();
+    } catch (error) {
+        console.error("Ошибка при вызове telegram.sendData() или telegram.close():", error);
+        debug.innerText = `❌ Ошибка: ${error.message}`;
+    }
+}
+
 
         window.onload = startScanner;
     </script>
