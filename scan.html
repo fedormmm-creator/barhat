@@ -6,119 +6,97 @@
     <title>Сканер QR-кода</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <style>
-        body {
+        body { 
+            margin: 0; 
+            padding: 0; 
+            background: #000; 
+            color: #FFF;
+            font-family: Arial;
             text-align: center;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
         }
-
-        video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        #video { 
+            width: 100%; 
+            height: 100vh; 
+            object-fit: cover; 
         }
-
         #scan-area {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 300px;
-            height: 300px;
             transform: translate(-50%, -50%);
-            border: 2px solid #00FF00;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.9);
+            width: 250px;
+            height: 250px;
+            border: 3px solid #00FF00;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
         }
-
         #message {
-            position: absolute;
+            position: fixed;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 18px;
-            color: #FFFFFF;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 10px 20px;
-            border-radius: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
         }
-
         #debug {
-            position: absolute;
+            position: fixed;
             top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 14px;
-            color: blue;
-            word-wrap: break-word;
+            left: 10px;
+            color: #00FF00;
+            font-size: 12px;
         }
     </style>
 </head>
 <body>
-    <h2>📸 Наведите камеру на QR-код</h2>
-    <video id="video" autoplay></video>
+    <h2>Наведите камеру на QR-код</h2>
+    <video id="video"></video>
     <div id="scan-area"></div>
     <p id="message">Ожидание сканирования...</p>
-    <p id="debug">Отладочная информация будет здесь</p>
+    <p id="debug"></p>
 
     <script>
         const codeReader = new ZXing.BrowserQRCodeReader();
-        const videoElement = document.getElementById("video");
-        const message = document.getElementById("message");
         const debug = document.getElementById("debug");
-
+        
         async function startScanner() {
             try {
                 const devices = await codeReader.getVideoInputDevices();
                 if (devices.length === 0) {
-                    message.innerText = "❌ Камера не найдена. Проверьте разрешения.";
+                    showError("❌ Камера не найдена!");
                     return;
                 }
-
-                await codeReader.decodeFromVideoDevice(devices[0].deviceId, videoElement, (result, err) => {
+                
+                codeReader.decodeFromVideoDevice(devices[0].deviceId, 'video', (result, error) => {
                     if (result) {
-                        message.innerText = `✅ QR-код найден: ${result.text}`;
+                        debug.textContent = `Найден QR-код: ${result.text}`;
                         sendToTelegram(result.text);
                     }
                 });
             } catch (err) {
-                message.innerText = "❌ Ошибка при запуске камеры!";
-                debug.innerText = `Ошибка: ${err}`;
-                console.error(err);
+                showError(`Ошибка: ${err.message}`);
             }
         }
 
         function sendToTelegram(qrText) {
-    const telegram = window.Telegram.WebApp;
+            const telegram = window.Telegram.WebApp;
+            if (!telegram) {
+                showError("Откройте через Telegram!");
+                return;
+            }
 
-    // Логируем контекст Telegram WebApp
-    console.log("Контекст Telegram WebApp:", telegram);
+            if (qrText.includes("table")) {
+                telegram.sendData(qrText);
+                setTimeout(() => telegram.close(), 300); // Закрытие с задержкой
+            } else {
+                showError("❌ Некорректный QR-код!");
+            }
+        }
 
-    if (!telegram) {
-        debug.innerText = "❌ Telegram WebApp не доступен. Убедитесь, что WebApp открыт в Telegram.";
-        return;
-    }
-
-    try {
-        // Логируем данные, которые отправляем
-        debug.innerText = `Отправка данных в Telegram: ${qrText}`;
-        console.log("Отправляем данные:", qrText);
-
-        // Отправляем данные в Telegram
-        telegram.sendData(qrText);
-
-        // Закрываем WebApp
-        debug.innerText += "\n✅ WebApp пытается закрыться.";
-        telegram.close();
-    } catch (error) {
-        console.error("Ошибка при вызове telegram.sendData() или telegram.close():", error);
-        debug.innerText = `❌ Ошибка: ${error.message}`;
-    }
-}
-
+        function showError(text) {
+            document.getElementById("message").textContent = text;
+            document.getElementById("debug").textContent = text;
+        }
 
         window.onload = startScanner;
     </script>
