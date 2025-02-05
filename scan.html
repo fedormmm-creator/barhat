@@ -77,22 +77,22 @@
                 showError(`Ошибка: ${err.message}`);
             }
         }
+function sendToTelegram(qrText) {
+    const telegram = window.Telegram.WebApp;
+    if (!telegram) {
+        showError("❌ Откройте WebApp через Telegram!");
+        return;
+    }
 
-        function sendToTelegram(qrText) {
-            const telegram = window.Telegram.WebApp;
-            if (!telegram) {
-                showError("Откройте через Telegram!");
-                return;
-            }
-
-            if (qrText.includes("table")) {
-                telegram.sendData(qrText);
-                setTimeout(() => telegram.close(), 300); // Закрытие с задержкой
-            } else {
-                showError("❌ Некорректный QR-код!");
-            }
-        }
-
+    if (qrText.includes("table")) {
+        telegram.sendData(qrText);
+        setTimeout(() => {
+            telegram.close(); // Закрыть WebApp через 0.5 секунды
+        }, 500);
+    } else {
+        showError("❌ Некорректный QR-код!");
+    }
+}
         function showError(text) {
             document.getElementById("message").textContent = text;
             document.getElementById("debug").textContent = text;
