@@ -1,120 +1,17 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Сканер QR-кода</title>
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #000;
-            color: #FFF;
-            font-family: Arial;
-            text-align: center;
+    <script>
+        function sendData() {
+            const telegram = window.Telegram.WebApp;
+            if (telegram) {
+                telegram.sendData("table12"); // Принудительно отправляем table12
+                telegram.close();
+            }
         }
-        #video {
-            width: 100%;
-            height: 100vh;
-            object-fit: cover;
-        }
-        #scan-area {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 250px;
-            height: 250px;
-            border: 3px solid #00FF00;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
-        }
-        #message {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.7);
-            padding: 10px;
-            border-radius: 5px;
-        }
-        #debug {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            color: #00FF00;
-            font-size: 12px;
-        }
-    </style>
+    </script>
 </head>
 <body>
-    <h2>Наведите камеру на QR-код</h2>
-    <video id="video"></video>
-    <div id="scan-area"></div>
-    <p id="message">Ожидание сканирования...</p>
-    <p id="debug"></p>
-
-    <script>
-        const codeReader = new ZXing.BrowserQRCodeReader();
-        const debug = document.getElementById("debug");
-
-        // Запуск сканера
-        async function startScanner() {
-            try {
-                const devices = await codeReader.getVideoInputDevices();
-                if (devices.length === 0) {
-                    showError("❌ Камера не найдена!");
-                    return;
-                }
-
-                codeReader.decodeFromVideoDevice(devices[0].deviceId, 'video', (result, error) => {
-                    if (result) {
-                        debug.textContent = `Найден QR-код: ${result.text}`;
-                        processQR(result.text);
-                    }
-                });
-            } catch (err) {
-                showError(`Ошибка: ${err.message}`);
-            }
-        }
-
-        // Обработка QR-кода
-        function processQR(qrText) {
-            try {
-                const url = new URL(qrText);
-                const tableParam = url.searchParams.get("start"); // Извлекаем параметр start=table12
-
-                if (tableParam && tableParam.startsWith("table")) {
-                    sendToTelegram(tableParam); // Отправляем только "table12"
-                } else {
-                    showError("❌ Некорректный QR-код!");
-                }
-            } catch {
-                showError("❌ Неверный формат ссылки!");
-            }
-        }
-
-        // Отправка данных в Telegram
-        function sendToTelegram(data) {
-            const telegram = window.Telegram.WebApp;
-            if (!telegram) {
-                showError("❌ Откройте WebApp через Telegram!");
-                return;
-            }
-
-            telegram.sendData(data); // Отправляем данные
-            setTimeout(() => telegram.close(), 500); // Закрываем WebApp через 0.5 сек
-        }
-
-        // Вывод ошибок
-        function showError(text) {
-            document.getElementById("message").textContent = text;
-            document.getElementById("debug").textContent = text;
-        }
-
-        // Запуск при загрузке страницы
-        window.onload = startScanner;
-    </script>
+    <button onclick="sendData()">Тест: Отправить table12</button>
 </body>
 </html>
