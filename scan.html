@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сканер QR-кода</title>
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        video { width: 100%; max-width: 500px; border: 2px solid #000; }
+        #message { font-size: 18px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h2>📸 Наведите камеру на QR-код</h2>
+    <video id="video" autoplay></video>
+    <p id="message">Ожидание сканирования...</p>
+
+    <script>
+        const codeReader = new ZXing.BrowserQRCodeReader();
+        const videoElement = document.getElementById("video");
+        const message = document.getElementById("message");
+
+        async function startScanner() {
+            try {
+                const devices = await codeReader.getVideoInputDevices();
+                if (devices.length > 0) {
+                    await codeReader.decodeFromVideoDevice(devices[0].deviceId, videoElement, (result, err) => {
+                        if (result) {
+                            message.innerText = "✅ QR-код найден!";
+                            sendToTelegram(result.text);
+                        } else {
+                            message.innerText = "🔍 Сканирование...";
+                        }
+                    });
+                } else {
+                    message.innerText = "❌ Камера не найдена!";
+                }
+            } catch (err) {
+                message.innerText = "❌ Ошибка при запуске камеры!";
+                console.error(err);
+            }
+        }
+
+        function sendToTelegram(qrText) {
+            const telegram = window.Telegram.WebApp;
+            telegram.sendData(qrText); // Отправляем данные в бота
+            telegram.close(); // Закрываем WebApp
+        }
+
+        window.onload = startScanner;
+    </script>
+
+</body>
+</html>
