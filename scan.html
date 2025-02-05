@@ -2,16 +2,18 @@
 <html>
 <head>
     <script>
-        function sendData() {
+        function sendTestData() {
             const telegram = window.Telegram.WebApp;
             if (telegram) {
-                telegram.sendData("table12"); // Принудительно отправляем table12
+                telegram.sendData("https://t.me/barhat_vrn_bot?start=table12");
                 telegram.close();
+            } else {
+                alert("Откройте через Telegram!");
             }
         }
     </script>
 </head>
 <body>
-    <button onclick="sendData()">Тест: Отправить table12</button>
+    <button onclick="sendTestData()">Тест: Отправить table12</button>
 </body>
 </html>
