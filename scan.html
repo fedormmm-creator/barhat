@@ -6,18 +6,18 @@
     <title>Сканер QR-кода</title>
     <script src="https://unpkg.com/@zxing/library@latest"></script>
     <style>
-        body { 
-            margin: 0; 
-            padding: 0; 
-            background: #000; 
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
             color: #FFF;
             font-family: Arial;
             text-align: center;
         }
-        #video { 
-            width: 100%; 
-            height: 100vh; 
-            object-fit: cover; 
+        #video {
+            width: 100%;
+            height: 100vh;
+            object-fit: cover;
         }
         #scan-area {
             position: absolute;
@@ -58,7 +58,8 @@
     <script>
         const codeReader = new ZXing.BrowserQRCodeReader();
         const debug = document.getElementById("debug");
-        
+
+        // Запуск сканера
         async function startScanner() {
             try {
                 const devices = await codeReader.getVideoInputDevices();
@@ -66,38 +67,53 @@
                     showError("❌ Камера не найдена!");
                     return;
                 }
-                
+
                 codeReader.decodeFromVideoDevice(devices[0].deviceId, 'video', (result, error) => {
                     if (result) {
                         debug.textContent = `Найден QR-код: ${result.text}`;
-                        sendToTelegram(result.text);
+                        processQR(result.text);
                     }
                 });
             } catch (err) {
                 showError(`Ошибка: ${err.message}`);
             }
         }
-function sendToTelegram(qrText) {
-    const telegram = window.Telegram.WebApp;
-    if (!telegram) {
-        showError("❌ Откройте WebApp через Telegram!");
-        return;
-    }
 
-    if (qrText.includes("table")) {
-        telegram.sendData(qrText);
-        setTimeout(() => {
-            telegram.close(); // Закрыть WebApp через 0.5 секунды
-        }, 500);
-    } else {
-        showError("❌ Некорректный QR-код!");
-    }
-}
+        // Обработка QR-кода
+        function processQR(qrText) {
+            try {
+                const url = new URL(qrText);
+                const tableParam = url.searchParams.get("start"); // Извлекаем параметр start=table12
+
+                if (tableParam && tableParam.startsWith("table")) {
+                    sendToTelegram(tableParam); // Отправляем только "table12"
+                } else {
+                    showError("❌ Некорректный QR-код!");
+                }
+            } catch {
+                showError("❌ Неверный формат ссылки!");
+            }
+        }
+
+        // Отправка данных в Telegram
+        function sendToTelegram(data) {
+            const telegram = window.Telegram.WebApp;
+            if (!telegram) {
+                showError("❌ Откройте WebApp через Telegram!");
+                return;
+            }
+
+            telegram.sendData(data); // Отправляем данные
+            setTimeout(() => telegram.close(), 500); // Закрываем WebApp через 0.5 сек
+        }
+
+        // Вывод ошибок
         function showError(text) {
             document.getElementById("message").textContent = text;
             document.getElementById("debug").textContent = text;
         }
 
+        // Запуск при загрузке страницы
         window.onload = startScanner;
     </script>
 </body>
